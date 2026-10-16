@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="cyber-crimson">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ProDomo Focus Studio - Ứng dụng Pomodoro & Deep Work thông minh, tích hợp quản lý công việc, âm thanh sóng não & thiên nhiên procedural, và thống kê năng suất chuyên sâu.">
+  <meta name="keywords" content="prodomo, pomodoro, focus timer, deep work, quản lý thời gian, năng suất, ambient sound">
+  <meta name="author" content="ProDomo Studio">
+  <meta name="theme-color" content="#ff3366">
+  
+  <title>ProDomo — Deep Work & Focus Studio</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="assets/logo.png">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Zen Fullscreen Minimal Overlay -->
+  <div id="zenOverlay">
+    <button class="zen-exit-btn" id="zenExitBtn">✕ Thoát Zen Mode (ESC)</button>
+    <div class="zen-timer-wrap">
+      <div class="timer-state-label" id="zenStateLabel">🍅 PHIÊN TẬP TRUNG</div>
+      <h2 class="zen-task-title" id="zenTaskTitle">Đang tập trung chuyên sâu</h2>
+      <div class="zen-timer-display" id="zenTimerDisplay">25:00</div>
+      <div class="zen-breathing-guide">Hít vào thật sâu... Giữ vững dòng chảy tư duy... Thở ra nhẹ nhàng</div>
+    </div>
+  </div>
+
+  <!-- Main Application Wrapper -->
+  <div id="app-container">
+    
+    <!-- TOP NAVIGATION BAR -->
+    <header class="navbar" role="banner">
+      <div class="brand-section">
+        <div class="brand-logo-wrap">
+          <img src="assets/logo.png" alt="ProDomo Logo" class="brand-logo-img">
+        </div>
+        <div class="brand-info">
+          <h1>
+            <span class="pro">ProDomo</span>
+            <span class="badge">STUDIO</span>
+          </h1>
+          <p class="brand-tagline">Deep Work & Pomodoro Focus Engine</p>
+        </div>
+      </div>
+
+      <!-- Quick Productivity Pills -->
+      <div class="nav-stats-pills">
+        <div class="stat-pill" title="Chuỗi ngày liên tục duy trì thói quen tập trung">
+          <span class="icon">🔥</span>
+          <span>Chuỗi: <strong id="navStreakCount">1 ngày</strong></span>
+        </div>
+        <div class="stat-pill" title="Tổng số phiên Pomodoro đã hoàn thành hôm nay">
+          <span class="icon">🍅</span>
+          <span>Hôm nay: <strong id="navTodayPomos">3 phiên</strong></span>
+        </div>
+        <div class="stat-pill" title="Tổng thời lượng tập trung tích lũy hôm nay">
+          <span class="icon">⏱️</span>
+          <span>Thời gian: <strong id="navTodayTime">1.3 giờ</strong></span>
+        </div>
+      </div>
+
+      <!-- Action Icons -->
+      <nav class="nav-actions" aria-label="Quick Actions">
+        <button class="btn-icon" id="btnZenMode" aria-label="Bật chế độ Zen toàn màn hình">
+          🔲
+          <span class="tooltip">Zen Mode (Alt+Z)</span>
+        </button>
+        <button class="btn-icon" id="btnOpenThemes" aria-label="Chọn giao diện & màu sắc">
+          🎨
+          <span class="tooltip">Đổi Giao Diện</span>
+        </button>
+        <button class="btn-icon" id="btnOpenAnalytics" aria-label="Xem thống kê năng suất chi tiết">
+          📊
+          <span class="tooltip">Thống Kê (Heatmap)</span>
+        </button>
+        <button class="btn-icon" id="btnOpenSettings" aria-label="Cài đặt hệ thống">
+          ⚙️
+          <span class="tooltip">Cài Đặt</span>
+        </button>
+        <button class="btn-icon" id="btnLangToggle" aria-label="Đổi ngôn ngữ">
+          VI
+          <span class="tooltip">Tiếng Việt / English</span>
+        </button>
+      </nav>
+    </header>
+
+    <!-- MAIN DASHBOARD (3 MODULAR COLUMNS) -->
+    <main class="dashboard-grid">
+
+      <!-- LEFT COLUMN: TASK COMMANDER -->
+      <section class="glass-panel tasks-panel" aria-label="Quản lý công việc">
+        <div class="panel-header">
+          <h2 class="panel-title">
+            <span>📋</span>
+            <span>Kế Hoạch Công Việc</span>
+            <span class="badge-count" id="tasksBadgeCount">0 việc</span>
+          </h2>
+        </div>
+
+        <!-- Filter Tags -->
+        <div class="task-filter-tags">
+          <button class="tag-btn active" data-filter="all">Tất cả</button>
+          <button class="tag-btn" data-filter="active">Đang làm</button>
+          <button class="tag-btn" data-filter="completed">Đã xong</button>
+          <button class="tag-btn" data-filter="dev">💻 Lập trình</button>
+          <button class="tag-btn" data-filter="study">📚 Học tập</button>
+          <button class="tag-btn" data-filter="work">💼 Công việc</button>
+          <button class="tag-btn" data-filter="creative">🎨 Sáng tạo</button>
+          <button class="tag-btn" data-filter="personal">🧘 Đời sống</button>
+        </div>
+
+        <!-- Task Quick Input Bar -->
+        <div class="task-input-bar">
+          <div class="input-row">
+            <input type="text" id="taskTitleInput" class="task-title-input" placeholder="Nhập việc cần tập trung... (Enter)">
+            <button class="btn-primary-add" id="btnAddTask">
+              <span>＋</span> Thêm
+            </button>
+          </div>
+          <div class="input-options-row">
+            <select id="taskCategorySelect" class="select-custom" aria-label="Danh mục nhiệm vụ">
+              <option value="dev">💻 Lập trình</option>
+              <option value="work" selected>💼 Công việc</option>
+              <option value="study">📚 Học tập</option>
+              <option value="creative">🎨 Sáng tạo</option>
+              <option value="personal">🧘 Đời sống</option>
+            </select>
+
+            <select id="taskPrioritySelect" class="select-custom" aria-label="Độ ưu tiên">
+              <option value="high">🔴 Ưu tiên cao</option>
+              <option value="medium" selected>🟡 Trung bình</option>
+              <option value="low">🟢 Nhẹ nhàng</option>
+            </select>
+
+            <div class="pomo-estimate-picker" title="Ước tính số phiên Pomodoro 25 phút để hoàn thành việc này">
+              <span>🍅 Dự kiến:</span>
+              <input type="number" id="taskEstimateInput" min="1" max="12" value="2" aria-label="Ước tính số phiên">
+            </div>
+          </div>
+        </div>
+
+        <!-- Tasks List Scroll Area -->
+        <div class="tasks-list-container" id="tasksList">
+          <!-- Dynamically populated by tasks.js -->
+        </div>
+      </section>
+
+      <!-- CENTER COLUMN: THE HERO FOCUS STATION -->
+      <section class="glass-panel timer-hero-panel" aria-label="Bộ đếm giờ Pomodoro">
+        
+        <!-- Timer Modes Selector -->
+        <div class="timer-mode-selector">
+          <button class="mode-tab-btn active" data-mode="pomodoro">
+            <span>🍅</span> Pomodoro
+          </button>
+          <button class="mode-tab-btn" data-mode="short-break">
+            <span>☕</span> Nghỉ ngắn
+          </button>
+          <button class="mode-tab-btn" data-mode="long-break">
+            <span>🌴</span> Nghỉ dài
+          </button>
+          <button class="mode-tab-btn" data-mode="deep-work">
+            <span>⚡</span> Deep Work
+          </button>
+        </div>
+
+        <!-- Active Task Highlight Pill -->
+        <div class="active-task-banner" id="activeTaskDisplay" title="Nhiệm vụ đang liên kết với bộ đếm giờ">
+          <span class="label">Tiêu điểm:</span>
+          <span class="task-name" id="activeTaskName">Chưa chọn nhiệm vụ nào</span>
+        </div>
+
+        <!-- Circular SVG Timer -->
+        <div class="circular-timer-wrapper">
+          <svg class="timer-svg" viewBox="0 0 380 380">
+            <!-- Background glow circle -->
+            <circle class="timer-circle-bg" cx="190" cy="190" r="170"></circle>
+            <!-- Track circle -->
+            <circle class="timer-circle-track" cx="190" cy="190" r="170"></circle>
+            <!-- Progress animated circle -->
+            <circle id="timerCircleProgress" class="timer-circle-progress" cx="190" cy="190" r="170"></circle>
+          </svg>
+
+          <!-- Inner Content inside Circle -->
+          <div class="timer-inner-content">
+            <span class="timer-state-label" id="timerStateLabel">🍅 PHIÊN TẬP TRUNG</span>
+            <div class="timer-digital-display" id="timerDigitalDisplay">25:00</div>
+            
+            <!-- Cycle Indicator Dots -->
+            <div class="timer-cycle-indicator">
+              <div id="timerCycleDots" style="display:flex; gap:8px;"></div>
+              <span class="cycle-text" id="timerCycleText">1/4 phiên</span>
+            </div>
+
+            <!-- Quick Adjust Buttons -->
+            <div class="quick-adjust-bar">
+              <button class="btn-time-adjust" id="btnPlus1Min">+1m</button>
+              <button class="btn-time-adjust" id="btnPlus5Min">+5m</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls Row -->
+        <div class="timer-controls-row">
+          <button class="btn-timer-secondary" id="btnTimerReset" title="Đặt lại thời gian (Alt+R)" aria-label="Đặt lại">
+            ↺
+          </button>
+          <button class="btn-timer-main" id="btnTimerPlay" aria-label="Bắt đầu hoặc Tạm dừng (Space)">
+            <span>▶</span> <span>BẮT ĐẦU</span>
+          </button>
+          <button class="btn-timer-secondary" id="btnTimerSkip" title="Bỏ qua phiên hiện tại (Alt+S)" aria-label="Bỏ qua">
+            ⏭
+          </button>
+        </div>
+
+        <!-- Motivational Quote -->
+        <div class="focus-quote-box">
+          <span style="font-size:1.1rem;">💡</span>
+          <span id="focusQuoteText">“Tập trung sâu là siêu năng lực của thế kỷ 21.” — Cal Newport</span>
+        </div>
+      </section>
+
+      <!-- RIGHT COLUMN: SOUND STUDIO & INSIGHTS -->
+      <aside class="right-column">
+        
+        <!-- SOUND STUDIO WIDGET -->
+        <section class="glass-panel sound-panel" aria-label="Không gian âm thanh tập trung">
+          <div class="panel-header">
+            <h2 class="panel-title">
+              <span>🎧</span>
+              <span>Âm Thanh Tập Trung</span>
+            </h2>
+            <button class="btn-mute-all" id="btnMasterMute">🔊 Tắt tất cả</button>
+          </div>
+
+          <!-- Presets -->
+          <div class="sound-presets-row">
+            <button class="preset-chip" data-preset="rainy_day">🌧️ Mưa êm dịu</button>
+            <button class="preset-chip" data-preset="cafe_vibes">☕ Quán cà phê</button>
+            <button class="preset-chip" data-preset="deep_flow">🧠 Sóng 40Hz</button>
+            <button class="preset-chip" data-preset="zen_forest">🌲 Rừng thiền</button>
+            <button class="preset-chip" data-preset="warm_fire">🔥 Bếp lửa</button>
+          </div>
+
+          <!-- Sound Tracks List -->
+          <div class="sound-tracks-list">
+            
+            <!-- 1. Mưa rào -->
+            <div class="sound-track-item" id="trackItem_rain">
+              <div class="track-header">
+                <div class="track-info">
+                  <span class="track-icon">🌧️</span>
+                  <span class="track-name">Mưa Rào Tự Nhiên</span>
+                </div>
+                <button class="track-toggle" id="toggle_rain" aria-label="Bật/Tắt mưa">▶</button>
+              </div>
+              <div class="slider-container">
+                <input type="range" class="volume-slider" id="vol_rain" min="0" max="1" step="0.05" value="0" aria-label="Âm lượng mưa">
+                <span class="volume-val" id="val_rain">0%</span>
+              </div>
+            </div>
+
+            <!-- 2. Sóng biển -->
+            <div class="sound-track-item" id="trackItem_waves">
+              <div class="track-header">
+                <div class="track-info">
+                  <span class="track-icon">🌊</span>
+                  <span class="track-name">Sóng Biển Hoàng Hôn</span>
+                </div>
+                <button class="track-toggle" id="toggle_waves" aria-label="Bật/Tắt sóng biển">▶</button>
+              </div>
+              <div class="slider-container">
+                <input type="range" class="volume-slider" id="vol_waves" min="0" max="1" step="0.05" value="0" aria-label="Âm lượng sóng biển">
+                <span class="volume-val" id="val_waves">0%</span>
+              </div>
+            </div>
+
+            <!-- 3. Bếp lửa -->
+            <div class="sound-track-item" id="trackItem_fire">
+              <div class="track-header">
+                <div class="track-info">
+                  <span class="track-icon">🔥</span>
+                  <span class="track-name">Lửa Trại Lách Tách</span>
+                </div>
+                <button class="track-toggle" id="toggle_fire" aria-label="Bật/Tắt lửa trại">▶</button>
+              </div>
+              <div class="slider-container">
+                <input type="range" class="volume-slider" id="vol_fire" min="0" max="1" step="0.05" value="0" aria-label="Âm lượng lửa trại">
+                <span class="volume-val" id="val_fire">0%</span>
+              </div>
+            </div>
+
+            <!-- 4. Quán cà phê -->
+            <div class="sound-track-item" id="trackItem_cafe">
+              <div class="track-header">
+                <div class="track-info">
+                  <span class="track-icon">☕</span>
+                  <span class="track-name">Quán Cà Phê Ấm Cúng</span>
+                </div>
+                <button class="track-toggle" id="toggle_cafe" aria-label="Bật/Tắt quán cà phê">▶</button>
+              </div>
+              <div class="slider-container">
+                <input type="range" class="volume-slider" id="vol_cafe" min="0" max="1" step="0.05" value="0" aria-label="Âm lượng quán cà phê">
+                <span class="volume-val" id="val_cafe">0%</span>
+              </div>
+            </div>
+
+            <!-- 5. Rừng đêm -->
+            <div class="sound-track-item" id="trackItem_forest">
+              <div class="track-header">
+                <div class="track-info">
+                  <span class="track-icon">🌲</span>
+                  <span class="track-name">Gió Rừng & Đêm Khuya</span>
+                </div>
+                <button class="track-toggle" id="toggle_forest" aria-label="Bật/Tắt rừng đêm">▶</button>
+              </div>
+              <div class="slider-container">
+                <input type="range" class="volume-slider" id="vol_forest" min="0" max="1" step="0.05" value="0" aria-label="Âm lượng rừng đêm">
+                <span class="volume-val" id="val_forest">0%</span>
+              </div>
+            </div>
+
+            <!-- 6. 40Hz Gamma Waves -->
+            <div class="sound-track-item" id="trackItem_gamma">
+              <div class="track-header">
+                <div class="track-info">
+                  <span class="track-icon">⚡</span>
+                  <span class="track-name">Sóng Não 40Hz (Laser Focus)</span>
+                </div>
+                <button class="track-toggle" id="toggle_gamma" aria-label="Bật/Tắt sóng 40Hz">▶</button>
+              </div>
+              <div class="slider-container">
+                <input type="range" class="volume-slider" id="vol_gamma" min="0" max="1" step="0.05" value="0" aria-label="Âm lượng sóng 40Hz">
+                <span class="volume-val" id="val_gamma">0%</span>
+              </div>
+            </div>
+
+            <!-- 7. 10Hz Alpha Waves -->
+            <div class="sound-track-item" id="trackItem_alpha">
+              <div class="track-header">
+                <div class="track-info">
+                  <span class="track-icon">🧘</span>
+                  <span class="track-name">Sóng Não 10Hz (Thư Thái Sáng Tạo)</span>
+                </div>
+                <button class="track-toggle" id="toggle_alpha" aria-label="Bật/Tắt sóng 10Hz">▶</button>
+              </div>
+              <div class="slider-container">
+                <input type="range" class="volume-slider" id="vol_alpha" min="0" max="1" step="0.05" value="0" aria-label="Âm lượng sóng 10Hz">
+                <span class="volume-val" id="val_alpha">0%</span>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- INSIGHTS & ZEN GARDEN WIDGET -->
+        <section class="glass-panel insights-panel" aria-label="Vườn thiền và mục tiêu ngày">
+          <div class="panel-header">
+            <h2 class="panel-title">
+              <span>🌿</span>
+              <span>Vườn Thiền & Mục Tiêu</span>
+            </h2>
+            <button class="btn-mute-all" id="btnExportData" title="Tải xuống tệp sao lưu dữ liệu JSON">
+              💾 Sao lưu
+            </button>
+          </div>
+
+          <div class="insights-content">
+            
+            <!-- Daily Goal Card -->
+            <div class="daily-goal-box">
+              <div class="daily-goal-text">
+                <h4>Tiến Độ Mục Tiêu Ngày</h4>
+                <p id="goalMinutesDone">75 / 180 phút</p>
+              </div>
+              <div class="goal-progress-badge" id="goalPercentage">42%</div>
+            </div>
+
+            <!-- Zen Garden Virtual Tree Canvas -->
+            <div class="garden-widget">
+              <div class="garden-header">
+                <span>Cây Tập Trung Cá Nhân</span>
+                <span class="garden-level-pill" id="gardenLevelBadge">Cấp 2 • Chồi Non</span>
+              </div>
+              <div class="garden-canvas-wrap">
+                <canvas id="gardenCanvas"></canvas>
+              </div>
+              <div class="garden-status-text" id="gardenStatusText">
+                Hoàn thành thêm các phiên Pomodoro để cây lớn lên rực rỡ!
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+      </aside>
+    </main>
+  </div>
+
+  <!-- MODAL: ANALYTICS & 30-DAY HEATMAP -->
+  <div class="modal-backdrop" id="analyticsModal" role="dialog" aria-modal="true" aria-labelledby="analyticsTitle">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 id="analyticsTitle">📊 Thống Kê Năng Suất Chuyên Sâu</h3>
+        <button class="modal-close-btn" aria-label="Đóng modal">✕</button>
+      </div>
+      <div class="modal-body">
+        
+        <div>
+          <div class="settings-section-title">Ma trận tập trung 30 ngày (Activity Heatmap)</div>
+          <div class="heatmap-container">
+            <div class="heatmap-grid" id="analyticsHeatmapGrid"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:var(--text-muted); margin-top:8px;">
+              <span>30 ngày trước</span>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span>Ít</span>
+                <span style="width:10px; height:10px; background:rgba(255,255,255,0.05); border-radius:2px;"></span>
+                <span style="width:10px; height:10px; background:rgba(255,51,102,0.25); border-radius:2px;"></span>
+                <span style="width:10px; height:10px; background:rgba(255,51,102,0.5); border-radius:2px;"></span>
+                <span style="width:10px; height:10px; background:#ff3366; border-radius:2px;"></span>
+                <span>Nhiều</span>
+              </div>
+              <span>Hôm nay</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="settings-section-title">Phân Bổ Thời Gian Theo Danh Mục</div>
+          <div id="analyticsCategoryList"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SETTINGS -->
+  <div class="modal-backdrop" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 id="settingsModalTitle">⚙️ Cài Đặt Hệ Thống ProDomo</h3>
+        <button class="modal-close-btn" aria-label="Đóng modal">✕</button>
+      </div>
+      <div class="modal-body">
+        
+        <div>
+          <div class="settings-section-title">Thời Lượng Các Phiên (Phút)</div>
+          <div class="settings-grid-row">
+            <div class="settings-field">
+              <label for="settingPomoDuration">Phiên Pomodoro:</label>
+              <input type="number" id="settingPomoDuration" min="1" max="120" value="25">
+            </div>
+            <div class="settings-field">
+              <label for="settingShortDuration">Nghỉ ngắn:</label>
+              <input type="number" id="settingShortDuration" min="1" max="30" value="5">
+            </div>
+            <div class="settings-field">
+              <label for="settingLongDuration">Nghỉ dài:</label>
+              <input type="number" id="settingLongDuration" min="1" max="60" value="15">
+            </div>
+            <div class="settings-field">
+              <label for="settingLongInterval">Số phiên trước nghỉ dài:</label>
+              <input type="number" id="settingLongInterval" min="1" max="10" value="4">
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="settings-section-title">Âm Thanh & Thông Báo</div>
+          <div class="settings-grid-row">
+            <div class="settings-field">
+              <label for="settingAlarmSound">Chuông khi hoàn thành:</label>
+              <div style="display:flex; gap:8px;">
+                <select id="settingAlarmSound" style="flex:1;">
+                  <option value="zen_gong">Chuông thiền Tây Tạng (Zen Gong)</option>
+                  <option value="crystal_chime">Hợp âm pha lê (Crystal Chime)</option>
+                  <option value="bell">Chuông thang máy êm dịu (Bell)</option>
+                  <option value="digital">Digital Beep công nghệ</option>
+                </select>
+                <button type="button" class="btn-time-adjust" id="btnTestAlarmSound" style="padding:6px 12px;">Nghe thử</button>
+              </div>
+            </div>
+            <div class="settings-field">
+              <label for="settingTickingSound">Tiếng tích tắc khi chạy:</label>
+              <select id="settingTickingSound">
+                <option value="silent">Hoàn toàn yên lặng (Khuyên dùng)</option>
+                <option value="analog">Đồng hồ kim analog êm ái</option>
+                <option value="wood">Gõ gỗ nhịp nhàng (Woodblock)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="settings-section-title">Tự Động Hóa Dòng Chảy</div>
+          
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <h4>Tự động bắt đầu giờ nghỉ</h4>
+              <p>Tự động đếm ngược giờ nghỉ khi phiên Pomodoro kết thúc</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="settingAutoBreak">
+              <span class="slider-switch"></span>
+            </label>
+          </div>
+
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <h4>Tự động bắt đầu Pomodoro tiếp theo</h4>
+              <p>Tự động chạy phiên Pomodoro mới sau khi kết thúc giờ nghỉ</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="settingAutoPomo">
+              <span class="slider-switch"></span>
+            </label>
+          </div>
+        </div>
+
+        <button class="btn-primary-add" id="btnSaveSettings" style="justify-content:center; padding:12px; margin-top:10px;">
+          Lưu Cài Đặt
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: THEMES -->
+  <div class="modal-backdrop" id="themeModal" role="dialog" aria-modal="true" aria-labelledby="themeModalTitle">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 id="themeModalTitle">🎨 Chọn Phong Cách Giao Diện</h3>
+        <button class="modal-close-btn" aria-label="Đóng modal">✕</button>
+      </div>
+      <div class="modal-body">
+        
+        <div class="theme-picker-grid">
+          
+          <!-- Theme 1 -->
+          <div class="theme-card active" data-theme="cyber-crimson">
+            <div class="theme-preview-dots">
+              <span class="theme-dot" style="background:#ff3366;"></span>
+              <span class="theme-dot" style="background:#0a0d14;"></span>
+              <span class="theme-dot" style="background:#00e5ff;"></span>
+            </div>
+            <span class="theme-card-name">Cyber Crimson</span>
+          </div>
+
+          <!-- Theme 2 -->
+          <div class="theme-card" data-theme="midnight-nebula">
+            <div class="theme-preview-dots">
+              <span class="theme-dot" style="background:#8b5cf6;"></span>
+              <span class="theme-dot" style="background:#070913;"></span>
+              <span class="theme-dot" style="background:#38bdf8;"></span>
+            </div>
+            <span class="theme-card-name">Midnight Nebula</span>
+          </div>
+
+          <!-- Theme 3 -->
+          <div class="theme-card" data-theme="matcha-forest">
+            <div class="theme-preview-dots">
+              <span class="theme-dot" style="background:#10b981;"></span>
+              <span class="theme-dot" style="background:#07120c;"></span>
+              <span class="theme-dot" style="background:#a3e635;"></span>
+            </div>
+            <span class="theme-card-name">Matcha Forest</span>
+          </div>
+
+          <!-- Theme 4 -->
+          <div class="theme-card" data-theme="sunset-amber">
+            <div class="theme-preview-dots">
+              <span class="theme-dot" style="background:#f97316;"></span>
+              <span class="theme-dot" style="background:#120c08;"></span>
+              <span class="theme-dot" style="background:#fbbf24;"></span>
+            </div>
+            <span class="theme-card-name">Sunset Amber</span>
+          </div>
+
+          <!-- Theme 5 -->
+          <div class="theme-card" data-theme="oled-pure">
+            <div class="theme-preview-dots">
+              <span class="theme-dot" style="background:#ffffff;"></span>
+              <span class="theme-dot" style="background:#000000;"></span>
+              <span class="theme-dot" style="background:#94a3b8;"></span>
+            </div>
+            <span class="theme-card-name">OLED Minimal</span>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Logic Scripts -->
+  <script src="js/audio.js"></script>
+  <script src="js/tasks.js"></script>
+  <script src="js/stats.js"></script>
+  <script src="js/garden.js"></script>
+  <script src="js/timer.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
